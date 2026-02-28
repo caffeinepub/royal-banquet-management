@@ -57,7 +57,7 @@ export default function RoleSelector({ onNavigate }: Props) {
       <header className="portal-header py-4 px-6 flex items-center">
         <img
           src="/assets/generated/logo-transparent.dim_300x100.png"
-          alt="Royal Banquet"
+          alt="Prasad Divine Banquet"
           className="h-10 w-auto"
         />
       </header>
@@ -79,7 +79,7 @@ export default function RoleSelector({ onNavigate }: Props) {
             transition={{ delay: 0.1 }}
             className="font-display text-5xl sm:text-6xl text-maroon font-bold mb-4"
           >
-            Royal Banquet
+            Prasad Divine Banquet
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}

@@ -213,7 +213,11 @@ export default function CustomerPortal() {
   const { data: branches = [] } = useGetAllBranches();
   const { data: bookings = [] } = useGetAllBookings();
 
-  const { isFetching: actorLoading } = useActor();
+  const { isFetching: actorLoading, actor } = useActor();
+  // Actor is ready when the actor object exists (non-null).
+  // isFetching alone can be false while actor is still null (e.g. query not yet started).
+  const isActorReady = !!actor;
+  const isActorConnecting = !actor || actorLoading;
 
   const createBooking = useCreateBooking();
   const submitFeedback = useSubmitFeedback();
@@ -238,6 +242,12 @@ export default function CustomerPortal() {
       !form.eventDate
     ) {
       toast.error("Please fill all required fields");
+      return;
+    }
+    if (!isActorReady) {
+      toast.error(
+        "Still connecting to server. Please wait a moment and try again.",
+      );
       return;
     }
     try {
@@ -322,11 +332,11 @@ export default function CustomerPortal() {
         <div className="px-4 py-3 flex items-center justify-between">
           <img
             src="/assets/generated/logo-transparent.dim_300x100.png"
-            alt="Royal Banquet"
+            alt="Prasad Divine Banquet"
             className="h-9 w-auto"
           />
           <span className="text-gold font-accent text-sm tracking-widest uppercase">
-            Royal Banquet
+            Prasad Divine Banquet
           </span>
         </div>
 
@@ -378,7 +388,7 @@ export default function CustomerPortal() {
                   Welcome to
                 </p>
                 <h1 className="font-display text-4xl sm:text-6xl text-white font-bold leading-tight mb-3">
-                  Royal Banquet
+                  Prasad Divine Banquet
                 </h1>
                 <p className="text-white/90 text-base sm:text-xl max-w-2xl mx-auto mb-6 font-body">
                   Where every celebration becomes a cherished memory
@@ -426,7 +436,8 @@ export default function CustomerPortal() {
           {/* Why Choose Us */}
           <section className="py-12 px-4 max-w-6xl mx-auto">
             <h2 className="font-display text-3xl sm:text-4xl text-center text-maroon mb-8">
-              Why Choose <span className="text-gold">Royal Banquet?</span>
+              Why Choose{" "}
+              <span className="text-gold">Prasad Divine Banquet?</span>
             </h2>
             <div className="grid sm:grid-cols-3 gap-5">
               {[
@@ -591,7 +602,7 @@ export default function CustomerPortal() {
           <div className="mt-12 relative rounded-2xl overflow-hidden shadow-royal">
             <img
               src="/assets/generated/hall-wedding.dim_1200x700.jpg"
-              alt="Wedding at Royal Banquet"
+              alt="Wedding at Prasad Divine Banquet"
               className="w-full h-64 sm:h-80 object-cover"
             />
             <div className="absolute inset-0 hero-overlay flex items-center justify-center">
@@ -974,10 +985,10 @@ export default function CustomerPortal() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={createBooking.isPending || actorLoading}
+                  disabled={createBooking.isPending || !isActorReady}
                   className="w-full bg-maroon text-white text-lg h-14 font-bold hover:bg-maroon/90"
                 >
-                  {actorLoading ? (
+                  {isActorConnecting ? (
                     <span className="flex items-center gap-2">
                       <Clock className="h-5 w-5 animate-spin" /> Connecting...
                     </span>
@@ -1180,7 +1191,7 @@ export default function CustomerPortal() {
         <div className="max-w-5xl mx-auto px-4">
           <img
             src="/assets/generated/logo-transparent.dim_300x100.png"
-            alt="Royal Banquet"
+            alt="Prasad Divine Banquet"
             className="h-10 mx-auto mb-4"
           />
           <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 text-sm mb-4">
@@ -1234,7 +1245,7 @@ export default function CustomerPortal() {
                   A member of our team will call you shortly to confirm all
                   details and answer your questions.
                 </p>
-                {bookingId && (
+                {bookingId !== null && (
                   <div className="bg-gold/10 border border-gold/30 rounded-lg p-4 my-4">
                     <p className="text-sm text-muted-foreground">
                       Your Booking ID
@@ -1249,9 +1260,15 @@ export default function CustomerPortal() {
                 )}
                 <Button
                   className="bg-maroon text-white w-full text-lg h-12 mt-2"
-                  onClick={() => setBookingConfirmed(false)}
+                  onClick={() => {
+                    setBookingConfirmed(false);
+                    if (bookingId !== null) {
+                      setLookupId(bookingId.toString());
+                      setActiveTab("mybooking");
+                    }
+                  }}
                 >
-                  Great, Thank You!
+                  Track My Booking
                 </Button>
               </motion.div>
             </DialogContent>

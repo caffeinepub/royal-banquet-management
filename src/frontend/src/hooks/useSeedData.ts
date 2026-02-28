@@ -21,7 +21,7 @@ export function useSeedData() {
       try {
         // Create branch
         const branchId = await actor.createBranch(
-          "Royal Banquet — Main Branch",
+          "Prasad Divine Banquet — Main Branch",
           "123, MG Road, Mumbai, Maharashtra 400001",
           "Rajesh Kumar",
           "+91 98765 43210",

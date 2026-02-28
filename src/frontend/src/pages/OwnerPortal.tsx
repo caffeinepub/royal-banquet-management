@@ -75,7 +75,8 @@ function formatDate(ts: bigint) {
 }
 
 export default function OwnerPortal() {
-  const { login, clear, loginStatus, identity } = useInternetIdentity();
+  const { login, clear, loginStatus, identity, loginError } =
+    useInternetIdentity();
   const [activeTab, setActiveTab] = useState("revenue");
 
   const { data: branches = [], isLoading: branchesLoading } =
@@ -96,7 +97,7 @@ export default function OwnerPortal() {
   const updateHall = useUpdateHall();
   const updateMenuItem = useUpdateMenuItem();
 
-  const isLoggedIn = loginStatus === "success" && !!identity;
+  const isLoggedIn = !!identity;
 
   // Form states
   const [branchForm, setBranchForm] = useState({
@@ -128,7 +129,7 @@ export default function OwnerPortal() {
           <div className="text-center mb-8">
             <img
               src="/assets/generated/logo-transparent.dim_300x100.png"
-              alt="Royal Banquet"
+              alt="Prasad Divine Banquet"
               className="h-12 mx-auto mb-4"
             />
           </div>
@@ -149,7 +150,9 @@ export default function OwnerPortal() {
               </p>
               <Button
                 onClick={login}
-                disabled={loginStatus === "logging-in"}
+                disabled={
+                  loginStatus === "logging-in" || loginStatus === "initializing"
+                }
                 className="w-full bg-maroon text-white text-lg h-14 font-bold"
               >
                 {loginStatus === "logging-in" ? (
@@ -157,10 +160,20 @@ export default function OwnerPortal() {
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Signing
                     In...
                   </>
+                ) : loginStatus === "initializing" ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />{" "}
+                    Initializing...
+                  </>
                 ) : (
                   "Sign In as Owner"
                 )}
               </Button>
+              {loginStatus === "loginError" && loginError && (
+                <p className="mt-3 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 text-center">
+                  {loginError.message}
+                </p>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -291,7 +304,7 @@ export default function OwnerPortal() {
           <div className="flex items-center gap-3">
             <img
               src="/assets/generated/logo-transparent.dim_300x100.png"
-              alt="Royal Banquet"
+              alt="Prasad Divine Banquet"
               className="h-8 w-auto"
             />
             <span className="text-white font-semibold text-lg hidden sm:block">
