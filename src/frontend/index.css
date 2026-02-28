@@ -1,0 +1,261 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────────────────────
+   FONTS — Royal Banquet Design System
+   ──────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("/assets/fonts/PlayfairDisplay[wght].woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "General Sans";
+  src: url("/assets/fonts/GeneralSans[wght].woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces[opsz,wght].woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   DESIGN TOKENS — Royal Banquet (Deep Maroon & Warm Gold)
+   Aesthetic: Luxury Indian banquet — warm, regal, editorial
+   ──────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* Core palette: Deep cream background, rich maroon primary, warm gold accent */
+    --background: 0.97 0.012 60;
+    --foreground: 0.18 0.04 30;
+
+    --card: 0.99 0.008 55;
+    --card-foreground: 0.18 0.04 30;
+
+    --popover: 0.99 0.008 55;
+    --popover-foreground: 0.18 0.04 30;
+
+    /* Maroon primary */
+    --primary: 0.38 0.12 20;
+    --primary-foreground: 0.97 0.008 55;
+
+    /* Warm gold secondary */
+    --secondary: 0.88 0.08 75;
+    --secondary-foreground: 0.2 0.06 30;
+
+    --muted: 0.93 0.015 60;
+    --muted-foreground: 0.52 0.03 40;
+
+    /* Gold accent */
+    --accent: 0.78 0.12 72;
+    --accent-foreground: 0.18 0.06 30;
+
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.97 0 0;
+
+    --border: 0.88 0.02 55;
+    --input: 0.92 0.015 58;
+    --ring: 0.38 0.12 20;
+
+    /* Chart colors */
+    --chart-1: 0.38 0.12 20;
+    --chart-2: 0.78 0.12 72;
+    --chart-3: 0.55 0.08 200;
+    --chart-4: 0.65 0.15 140;
+    --chart-5: 0.7 0.18 45;
+
+    /* Sidebar */
+    --sidebar: 0.22 0.06 25;
+    --sidebar-foreground: 0.92 0.015 58;
+    --sidebar-primary: 0.78 0.12 72;
+    --sidebar-primary-foreground: 0.18 0.06 30;
+    --sidebar-accent: 0.32 0.08 25;
+    --sidebar-accent-foreground: 0.92 0.015 58;
+    --sidebar-border: 0.3 0.05 25;
+    --sidebar-ring: 0.78 0.12 72;
+
+    /* Custom tokens */
+    --gold: 0.78 0.12 72;
+    --maroon: 0.38 0.12 20;
+    --maroon-deep: 0.24 0.08 20;
+    --cream: 0.97 0.012 60;
+    --warm-white: 0.99 0.005 55;
+  }
+
+  .dark {
+    --background: 0.14 0.04 25;
+    --foreground: 0.94 0.012 60;
+
+    --card: 0.18 0.05 25;
+    --card-foreground: 0.94 0.012 60;
+
+    --popover: 0.2 0.05 25;
+    --popover-foreground: 0.94 0.012 60;
+
+    --primary: 0.78 0.12 72;
+    --primary-foreground: 0.14 0.04 25;
+
+    --secondary: 0.26 0.06 25;
+    --secondary-foreground: 0.92 0.012 58;
+
+    --muted: 0.24 0.05 25;
+    --muted-foreground: 0.62 0.03 50;
+
+    --accent: 0.68 0.1 72;
+    --accent-foreground: 0.14 0.04 25;
+
+    --destructive: 0.65 0.2 22;
+    --destructive-foreground: 0.94 0 0;
+
+    --border: 0.28 0.04 30;
+    --input: 0.26 0.04 28;
+    --ring: 0.78 0.12 72;
+
+    --chart-1: 0.78 0.12 72;
+    --chart-2: 0.62 0.14 20;
+    --chart-3: 0.6 0.1 200;
+    --chart-4: 0.65 0.15 140;
+    --chart-5: 0.7 0.18 45;
+
+    --sidebar: 0.16 0.05 25;
+    --sidebar-foreground: 0.92 0.012 58;
+    --sidebar-primary: 0.78 0.12 72;
+    --sidebar-primary-foreground: 0.14 0.04 25;
+    --sidebar-accent: 0.22 0.05 25;
+    --sidebar-accent-foreground: 0.92 0.012 58;
+    --sidebar-border: 0.24 0.04 28;
+    --sidebar-ring: 0.78 0.12 72;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "General Sans", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Playfair Display", serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   UTILITY CLASSES
+   ──────────────────────────────────────────────────────────── */
+
+@layer utilities {
+  .font-display {
+    font-family: "Playfair Display", serif;
+  }
+
+  .font-accent {
+    font-family: "Fraunces", serif;
+  }
+
+  .font-body {
+    font-family: "General Sans", sans-serif;
+  }
+
+  .text-gold {
+    color: oklch(var(--gold));
+  }
+
+  .text-maroon {
+    color: oklch(var(--maroon));
+  }
+
+  .bg-gold {
+    background-color: oklch(var(--gold));
+  }
+
+  .bg-maroon {
+    background-color: oklch(var(--maroon));
+  }
+
+  .bg-maroon-deep {
+    background-color: oklch(var(--maroon-deep));
+  }
+
+  .border-gold {
+    border-color: oklch(var(--gold));
+  }
+
+  .royal-gradient {
+    background: linear-gradient(
+      135deg,
+      oklch(var(--maroon-deep)) 0%,
+      oklch(var(--maroon)) 50%,
+      oklch(0.45 0.1 30) 100%
+    );
+  }
+
+  .gold-gradient {
+    background: linear-gradient(
+      135deg,
+      oklch(0.65 0.14 65) 0%,
+      oklch(var(--gold)) 50%,
+      oklch(0.85 0.1 80) 100%
+    );
+  }
+
+  .hero-overlay {
+    background: linear-gradient(
+      to bottom,
+      oklch(var(--maroon-deep) / 0.7) 0%,
+      oklch(var(--maroon-deep) / 0.4) 50%,
+      oklch(var(--maroon-deep) / 0.85) 100%
+    );
+  }
+
+  /* Large readable UI for non-technical users */
+  .readable-text {
+    font-size: 1.05rem;
+    line-height: 1.7;
+  }
+
+  .portal-header {
+    background: linear-gradient(
+      135deg,
+      oklch(var(--maroon-deep)) 0%,
+      oklch(var(--maroon)) 100%
+    );
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   SCROLLBAR STYLING
+   ──────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(var(--muted));
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--muted-foreground) / 0.4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--primary) / 0.6);
+}
