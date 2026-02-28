@@ -18,16 +18,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Briefcase,
+  Building2,
   Calendar,
   CheckCircle,
-  ChevronDown,
   Clock,
   Crown,
   Heart,
+  Home,
   Mail,
   MapPin,
   PartyPopper,
@@ -40,6 +40,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useActor } from "../hooks/useActor";
 import {
   useCreateBooking,
   useGetAllBookings,
@@ -93,11 +94,96 @@ const HALL_IMAGES: Record<string, string> = {
   "Corporate Suite": "/assets/generated/hall-corporate.dim_1200x700.jpg",
   "Celebration Hall": "/assets/generated/hall-celebration.dim_1200x700.jpg",
   "Wedding Pavilion": "/assets/generated/hall-wedding.dim_1200x700.jpg",
+  "Crystal Banquet": "/assets/generated/hall-crystal.dim_1200x700.jpg",
+  "Garden Lounge": "/assets/generated/hall-garden.dim_1200x700.jpg",
+  "Lotus Terrace": "/assets/generated/hall-lotus.dim_1200x700.jpg",
 };
+
+const FALLBACK_HALLS = [
+  {
+    id: 1n,
+    name: "Grand Ballroom",
+    capacity: 500n,
+    availableSeats: 500n,
+    pricePerHead: 850n,
+    description:
+      "Our flagship hall with crystal chandeliers and marble floors, perfect for grand weddings",
+    branchId: 0n,
+  },
+  {
+    id: 2n,
+    name: "Wedding Pavilion",
+    capacity: 300n,
+    availableSeats: 300n,
+    pricePerHead: 750n,
+    description:
+      "Traditional Indian wedding setup with mandap and marigold decorations",
+    branchId: 0n,
+  },
+  {
+    id: 3n,
+    name: "Celebration Hall",
+    capacity: 200n,
+    availableSeats: 200n,
+    pricePerHead: 600n,
+    description:
+      "Vibrant and colorful hall perfect for birthdays and social celebrations",
+    branchId: 0n,
+  },
+  {
+    id: 4n,
+    name: "Corporate Suite",
+    capacity: 150n,
+    availableSeats: 150n,
+    pricePerHead: 500n,
+    description:
+      "Professional setup for corporate events, conferences and seminars",
+    branchId: 0n,
+  },
+  {
+    id: 5n,
+    name: "Crystal Banquet",
+    capacity: 400n,
+    availableSeats: 400n,
+    pricePerHead: 900n,
+    description:
+      "Opulent hall adorned with sparkling crystal chandeliers, silver and white decor, perfect for grand weddings and galas",
+    branchId: 0n,
+  },
+  {
+    id: 6n,
+    name: "Garden Lounge",
+    capacity: 250n,
+    availableSeats: 250n,
+    pricePerHead: 700n,
+    description:
+      "Open-air garden pavilion with fairy lights and lush tropical greenery, ideal for romantic receptions and outdoor celebrations",
+    branchId: 0n,
+  },
+  {
+    id: 7n,
+    name: "Lotus Terrace",
+    capacity: 180n,
+    availableSeats: 180n,
+    pricePerHead: 650n,
+    description:
+      "Elegant terrace hall with a lotus flower theme, soft pink and gold palette, perfect for intimate ceremonies and cultural events",
+    branchId: 0n,
+  },
+] satisfies import("../backend.d").Hall[];
 
 function getHallImage(name: string): string {
   return HALL_IMAGES[name] || "/assets/generated/hall-grand.dim_1200x700.jpg";
 }
+
+const TABS = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "halls", label: "Halls", icon: Building2 },
+  { id: "events", label: "Events", icon: PartyPopper },
+  { id: "menu", label: "Menu", icon: UtensilsCrossed },
+  { id: "booking", label: "Book", icon: Calendar },
+  { id: "mybooking", label: "My Booking", icon: Search },
+];
 
 export default function CustomerPortal() {
   const [activeTab, setActiveTab] = useState("home");
@@ -120,16 +206,21 @@ export default function CustomerPortal() {
     notes: "",
   });
 
-  const { data: halls = [], isLoading: hallsLoading } = useGetAllHalls();
+  const { data: hallsRaw = [], isLoading: hallsLoading } = useGetAllHalls();
+  const halls = hallsRaw.length > 0 ? hallsRaw : FALLBACK_HALLS;
   const { data: menuItems = [], isLoading: menuLoading } = useGetAllMenuItems();
   const { data: menuCategories = [] } = useGetAllMenuCategories();
   const { data: branches = [] } = useGetAllBranches();
   const { data: bookings = [] } = useGetAllBookings();
 
+  const { isFetching: actorLoading } = useActor();
+
   const createBooking = useCreateBooking();
   const submitFeedback = useSubmitFeedback();
 
   const branchId = branches.length > 0 ? branches[0].id : 1n;
+  const selectedHall = halls.find((h) => h.id.toString() === form.hallId);
+  const effectiveBranchId = selectedHall ? selectedHall.branchId : branchId;
 
   const handleMenuToggle = (id: bigint) => {
     setSelectedMenuItems((prev) =>
@@ -158,7 +249,7 @@ export default function CustomerPortal() {
         customerEmail: form.customerEmail,
         eventType: form.eventType,
         hallId: BigInt(form.hallId),
-        branchId,
+        branchId: effectiveBranchId,
         eventDate: eventDateMs,
         guestCount: BigInt(form.guestCount || "1"),
         menuSelections: selectedMenuItems,
@@ -177,18 +268,26 @@ export default function CustomerPortal() {
         notes: "",
       });
       setSelectedMenuItems([]);
-    } catch {
-      toast.error("Booking failed. Please try again.");
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Booking failed. Please try again.";
+      toast.error(msg);
     }
   };
 
   const handleLookup = () => {
-    const id = BigInt(lookupId);
-    const booking = bookings.find((b) => b.id === id);
-    if (booking) {
-      setFoundBooking(booking);
-    } else {
-      toast.error("Booking not found. Please check your booking ID.");
+    try {
+      const id = BigInt(lookupId);
+      const booking = bookings.find((b) => b.id === id);
+      if (booking) {
+        setFoundBooking(booking);
+      } else {
+        toast.error("Booking not found. Please check your booking ID.");
+      }
+    } catch {
+      toast.error("Please enter a valid booking ID.");
     }
   };
 
@@ -218,47 +317,51 @@ export default function CustomerPortal() {
 
   return (
     <div className="min-h-screen bg-background font-body">
-      {/* HEADER */}
+      {/* HEADER — compact mobile header */}
       <header className="sticky top-0 z-50 portal-header shadow-royal">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src="/assets/generated/logo-transparent.dim_300x100.png"
-              alt="Royal Banquet"
-              className="h-10 w-auto"
-            />
+        <div className="px-4 py-3 flex items-center justify-between">
+          <img
+            src="/assets/generated/logo-transparent.dim_300x100.png"
+            alt="Royal Banquet"
+            className="h-9 w-auto"
+          />
+          <span className="text-gold font-accent text-sm tracking-widest uppercase">
+            Royal Banquet
+          </span>
+        </div>
+
+        {/* Customer tab bar — scrollable */}
+        <div className="overflow-x-auto scrollbar-none border-t border-white/10">
+          <div className="flex min-w-max px-2 pb-1">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  type="button"
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg mx-0.5 min-w-[60px] transition-colors ${
+                    isActive
+                      ? "bg-gold/20 text-gold"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span className="text-[10px] font-medium whitespace-nowrap">
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <nav className="flex gap-1">
-            {[
-              { id: "home", label: "Home" },
-              { id: "halls", label: "Our Halls" },
-              { id: "events", label: "Events" },
-              { id: "menu", label: "Menu" },
-              { id: "booking", label: "Book Now" },
-              { id: "mybooking", label: "My Booking" },
-            ].map((tab) => (
-              <button
-                type="button"
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-gold/20 text-white font-semibold"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
         </div>
       </header>
 
       {/* HOME / HERO */}
       {activeTab === "home" && (
         <div>
-          {/* Hero Section */}
-          <section className="relative h-[80vh] min-h-[500px] overflow-hidden">
+          {/* Hero Section — shorter on mobile */}
+          <section className="relative h-[50vh] min-h-[320px] overflow-hidden">
             <img
               src="/assets/generated/hall-grand.dim_1200x700.jpg"
               alt="Grand Banquet Hall"
@@ -271,19 +374,19 @@ export default function CustomerPortal() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
               >
-                <p className="text-gold font-accent text-lg mb-3 tracking-widest uppercase">
+                <p className="text-gold font-accent text-sm mb-2 tracking-widest uppercase">
                   Welcome to
                 </p>
-                <h1 className="font-display text-5xl sm:text-7xl text-white font-bold leading-tight mb-4">
+                <h1 className="font-display text-4xl sm:text-6xl text-white font-bold leading-tight mb-3">
                   Royal Banquet
                 </h1>
-                <p className="text-white/90 text-xl sm:text-2xl max-w-2xl mx-auto mb-8 font-body">
+                <p className="text-white/90 text-base sm:text-xl max-w-2xl mx-auto mb-6 font-body">
                   Where every celebration becomes a cherished memory
                 </p>
-                <div className="flex flex-wrap gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button
                     size="lg"
-                    className="bg-gold text-maroon font-bold text-lg px-8 py-6 hover:opacity-90 shadow-gold"
+                    className="bg-gold text-maroon font-bold text-base px-6 h-12 hover:opacity-90 shadow-gold"
                     onClick={() => setActiveTab("booking")}
                   >
                     <Calendar className="mr-2 h-5 w-5" /> Book Your Event
@@ -291,7 +394,7 @@ export default function CustomerPortal() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white/60 text-white bg-white/10 hover:bg-white/20 text-lg px-8 py-6"
+                    className="border-white/60 text-white bg-white/10 hover:bg-white/20 text-base px-6 h-12"
                     onClick={() => setActiveTab("halls")}
                   >
                     View Our Halls
@@ -299,14 +402,11 @@ export default function CustomerPortal() {
                 </div>
               </motion.div>
             </div>
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 animate-bounce">
-              <ChevronDown className="h-8 w-8" />
-            </div>
           </section>
 
           {/* Quick Stats */}
-          <section className="bg-maroon py-10">
-            <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          <section className="bg-maroon py-8">
+            <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               {[
                 { label: "Events Hosted", value: "5,000+" },
                 { label: "Happy Families", value: "4,800+" },
@@ -314,21 +414,21 @@ export default function CustomerPortal() {
                 { label: "Years of Excellence", value: "15+" },
               ].map((stat) => (
                 <div key={stat.label}>
-                  <p className="text-gold font-display text-4xl font-bold">
+                  <p className="text-gold font-display text-3xl sm:text-4xl font-bold">
                     {stat.value}
                   </p>
-                  <p className="text-white/80 mt-1">{stat.label}</p>
+                  <p className="text-white/80 mt-1 text-sm">{stat.label}</p>
                 </div>
               ))}
             </div>
           </section>
 
           {/* Why Choose Us */}
-          <section className="py-16 px-4 max-w-6xl mx-auto">
-            <h2 className="font-display text-4xl text-center text-maroon mb-12">
+          <section className="py-12 px-4 max-w-6xl mx-auto">
+            <h2 className="font-display text-3xl sm:text-4xl text-center text-maroon mb-8">
               Why Choose <span className="text-gold">Royal Banquet?</span>
             </h2>
-            <div className="grid sm:grid-cols-3 gap-8">
+            <div className="grid sm:grid-cols-3 gap-5">
               {[
                 {
                   icon: Crown,
@@ -348,15 +448,15 @@ export default function CustomerPortal() {
               ].map((item) => (
                 <Card
                   key={item.title}
-                  className="text-center p-6 shadow-royal hover:shadow-xl transition-shadow"
+                  className="text-center p-5 shadow-royal hover:shadow-xl transition-shadow"
                 >
-                  <div className="w-16 h-16 rounded-full bg-maroon/10 flex items-center justify-center mx-auto mb-4">
-                    <item.icon className="h-8 w-8 text-maroon" />
+                  <div className="w-14 h-14 rounded-full bg-maroon/10 flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="h-7 w-7 text-maroon" />
                   </div>
-                  <h3 className="font-display text-xl text-maroon font-semibold mb-2">
+                  <h3 className="font-display text-lg text-maroon font-semibold mb-2">
                     {item.title}
                   </h3>
-                  <p className="text-muted-foreground">{item.desc}</p>
+                  <p className="text-muted-foreground text-sm">{item.desc}</p>
                 </Card>
               ))}
             </div>
@@ -366,27 +466,27 @@ export default function CustomerPortal() {
 
       {/* HALLS */}
       {activeTab === "halls" && (
-        <div className="max-w-7xl mx-auto px-4 py-10">
-          <div className="text-center mb-10">
-            <h2 className="font-display text-4xl text-maroon mb-3">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <h2 className="font-display text-3xl sm:text-4xl text-maroon mb-2">
               Our Magnificent Halls
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground">
               Choose the perfect venue for your celebration
             </p>
           </div>
           {hallsLoading ? (
-            <div className="grid sm:grid-cols-2 gap-8">
+            <div className="grid sm:grid-cols-2 gap-5">
               {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-80 rounded-xl" />
+                <Skeleton key={i} className="h-72 rounded-xl" />
               ))}
             </div>
           ) : halls.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground text-lg">
+            <div className="text-center py-20 text-muted-foreground">
               Halls being updated. Please check back shortly.
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-8">
+            <div className="grid sm:grid-cols-2 gap-5">
               {halls.map((hall) => (
                 <motion.div
                   key={hall.id.toString()}
@@ -394,44 +494,43 @@ export default function CustomerPortal() {
                   animate={{ opacity: 1, y: 0 }}
                   className="group"
                 >
-                  <Card className="overflow-hidden shadow-royal hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                    <div className="relative h-56 overflow-hidden">
+                  <Card className="overflow-hidden shadow-royal hover:shadow-xl transition-all duration-300">
+                    <div className="relative h-44 overflow-hidden">
                       <img
                         src={getHallImage(hall.name)}
                         alt={hall.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 right-3">
-                        <Badge className="bg-gold text-maroon font-bold text-base px-3 py-1">
+                        <Badge className="bg-gold text-maroon font-bold px-3 py-1">
                           ₹{hall.pricePerHead.toString()}/head
                         </Badge>
                       </div>
                     </div>
-                    <CardContent className="p-6">
-                      <h3 className="font-display text-2xl text-maroon font-semibold mb-2">
+                    <CardContent className="p-4">
+                      <h3 className="font-display text-xl text-maroon font-semibold mb-2">
                         {hall.name}
                       </h3>
-                      <p className="text-muted-foreground mb-4">
+                      <p className="text-muted-foreground text-sm mb-4">
                         {hall.description}
                       </p>
-                      <div className="flex gap-4">
+                      <div className="flex gap-4 mb-4">
                         <div className="flex items-center gap-2 text-sm">
-                          <Users className="h-5 w-5 text-maroon" />
+                          <Users className="h-4 w-4 text-maroon" />
                           <span>
-                            <strong>{hall.capacity.toString()}</strong> Total
-                            Capacity
+                            <strong>{hall.capacity.toString()}</strong> seats
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-green-600" />
                           <span>
                             <strong>{hall.availableSeats.toString()}</strong>{" "}
-                            Available
+                            available
                           </span>
                         </div>
                       </div>
                       <Button
-                        className="mt-4 w-full bg-maroon text-white hover:bg-maroon/90"
+                        className="w-full bg-maroon text-white hover:bg-maroon/90 h-11"
                         onClick={() => {
                           setForm((f) => ({
                             ...f,
@@ -453,60 +552,59 @@ export default function CustomerPortal() {
 
       {/* EVENTS */}
       {activeTab === "events" && (
-        <div className="max-w-6xl mx-auto px-4 py-10">
-          <div className="text-center mb-10">
-            <h2 className="font-display text-4xl text-maroon mb-3">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <h2 className="font-display text-3xl sm:text-4xl text-maroon mb-2">
               Events We Host
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground">
               From intimate gatherings to grand celebrations
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {EVENT_TYPES.map((event) => (
               <motion.div key={event.value} whileHover={{ y: -4 }}>
                 <Card
-                  className="p-6 shadow-royal hover:shadow-xl transition-all cursor-pointer border-2 hover:border-gold/50"
+                  className="p-5 shadow-royal hover:shadow-xl transition-all cursor-pointer border-2 hover:border-gold/50 active:scale-[0.99]"
                   onClick={() => {
                     setForm((f) => ({ ...f, eventType: event.value }));
                     setActiveTab("booking");
                   }}
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                      <event.icon className={`h-6 w-6 ${event.color}`} />
+                    <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center shrink-0">
+                      <event.icon className={`h-5 w-5 ${event.color}`} />
                     </div>
-                    <h3 className="font-display text-xl font-semibold text-maroon">
+                    <h3 className="font-display text-lg font-semibold text-maroon">
                       {event.label}
                     </h3>
                   </div>
-                  <p className="text-muted-foreground">{event.desc}</p>
+                  <p className="text-muted-foreground text-sm">{event.desc}</p>
                   <p className="mt-3 text-sm text-gold font-medium">
-                    Click to book →
+                    Tap to book →
                   </p>
                 </Card>
               </motion.div>
             ))}
           </div>
 
-          {/* Wedding section with image */}
-          <div className="mt-16 relative rounded-2xl overflow-hidden shadow-royal">
+          <div className="mt-12 relative rounded-2xl overflow-hidden shadow-royal">
             <img
               src="/assets/generated/hall-wedding.dim_1200x700.jpg"
               alt="Wedding at Royal Banquet"
-              className="w-full h-80 object-cover"
+              className="w-full h-64 sm:h-80 object-cover"
             />
             <div className="absolute inset-0 hero-overlay flex items-center justify-center">
-              <div className="text-center text-white">
-                <p className="text-gold font-accent text-lg mb-2">
+              <div className="text-center text-white px-4">
+                <p className="text-gold font-accent text-base mb-2">
                   Make Your Dream Come True
                 </p>
-                <h3 className="font-display text-4xl font-bold mb-4">
+                <h3 className="font-display text-3xl font-bold mb-4">
                   Your Perfect Wedding Awaits
                 </h3>
                 <Button
                   size="lg"
-                  className="bg-gold text-maroon font-bold"
+                  className="bg-gold text-maroon font-bold h-12"
                   onClick={() => setActiveTab("booking")}
                 >
                   Plan Your Wedding
@@ -519,47 +617,46 @@ export default function CustomerPortal() {
 
       {/* MENU */}
       {activeTab === "menu" && (
-        <div className="max-w-6xl mx-auto px-4 py-10">
-          <div className="text-center mb-10">
-            <h2 className="font-display text-4xl text-maroon mb-3">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <h2 className="font-display text-3xl sm:text-4xl text-maroon mb-2">
               Our Culinary Offerings
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground">
               Authentic flavours crafted with love
             </p>
           </div>
 
-          {/* Hero food image */}
-          <div className="rounded-2xl overflow-hidden mb-10 shadow-royal">
+          <div className="rounded-2xl overflow-hidden mb-8 shadow-royal">
             <img
               src="/assets/generated/food-spread.dim_800x500.jpg"
               alt="Our Food"
-              className="w-full h-72 object-cover"
+              className="w-full h-52 sm:h-72 object-cover"
             />
           </div>
 
           {menuLoading ? (
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
+                <Skeleton key={i} className="h-20 rounded-xl" />
               ))}
             </div>
           ) : (
-            <div className="space-y-10">
+            <div className="space-y-8">
               {Object.entries(categorizedMenu).map(([category, items]) => (
                 <div key={category}>
-                  <h3 className="font-display text-2xl text-maroon font-semibold mb-4 border-b border-gold/30 pb-2">
+                  <h3 className="font-display text-xl text-maroon font-semibold mb-4 border-b border-gold/30 pb-2">
                     {category}
                   </h3>
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     {items.map((item) => (
                       <Card
                         key={item.id.toString()}
-                        className="p-4 flex items-start gap-4"
+                        className="p-4 flex items-start gap-3"
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold text-lg text-foreground">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <p className="font-semibold text-base text-foreground">
                               {item.name}
                             </p>
                             <Badge
@@ -589,20 +686,22 @@ export default function CustomerPortal() {
               ))}
               {Object.keys(categorizedMenu).length === 0 &&
                 menuItems.length > 0 && (
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-3">
                     {menuItems.map((item) => (
                       <Card
                         key={item.id.toString()}
-                        className="p-4 flex items-start gap-4"
+                        className="p-4 flex items-start gap-3"
                       >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-semibold text-lg">{item.name}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <p className="font-semibold text-base">
+                              {item.name}
+                            </p>
                             <Badge
                               className={
                                 item.isVegetarian
-                                  ? "bg-green-100 text-green-700"
-                                  : ""
+                                  ? "bg-green-100 text-green-700 text-xs"
+                                  : "text-xs"
                               }
                             >
                               {item.isVegetarian ? "🌿 Veg" : "🍖 Non-Veg"}
@@ -612,7 +711,7 @@ export default function CustomerPortal() {
                             {item.description}
                           </p>
                         </div>
-                        <p className="font-bold text-maroon text-lg">
+                        <p className="font-bold text-maroon text-lg shrink-0">
                           ₹{item.price.toString()}
                         </p>
                       </Card>
@@ -626,51 +725,49 @@ export default function CustomerPortal() {
 
       {/* BOOKING FORM */}
       {activeTab === "booking" && (
-        <div className="max-w-3xl mx-auto px-4 py-10">
-          <div className="text-center mb-8">
-            <h2 className="font-display text-4xl text-maroon mb-3">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="text-center mb-6">
+            <h2 className="font-display text-3xl sm:text-4xl text-maroon mb-2">
               Book Your Event
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground">
               Fill the form below and we'll get back to you shortly
             </p>
           </div>
 
           <Card className="shadow-royal">
-            <CardContent className="p-8">
-              <form onSubmit={handleBookingSubmit} className="space-y-6">
-                <div className="grid sm:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold">
-                      Full Name *
-                    </Label>
-                    <Input
-                      placeholder="e.g. Priya Sharma"
-                      className="text-base h-12"
-                      value={form.customerName}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, customerName: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold">
-                      Phone Number *
-                    </Label>
-                    <Input
-                      placeholder="e.g. 9876543210"
-                      className="text-base h-12"
-                      value={form.customerPhone}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          customerPhone: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+            <CardContent className="p-5 sm:p-8">
+              <form onSubmit={handleBookingSubmit} className="space-y-5">
+                {/* Full Name */}
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">Full Name *</Label>
+                  <Input
+                    placeholder="e.g. Priya Sharma"
+                    className="text-base h-14"
+                    value={form.customerName}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, customerName: e.target.value }))
+                    }
+                  />
                 </div>
 
+                {/* Phone */}
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">
+                    Phone Number *
+                  </Label>
+                  <Input
+                    placeholder="e.g. 9876543210"
+                    className="text-base h-14"
+                    inputMode="tel"
+                    value={form.customerPhone}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, customerPhone: e.target.value }))
+                    }
+                  />
+                </div>
+
+                {/* Email */}
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
                     Email Address
@@ -678,7 +775,7 @@ export default function CustomerPortal() {
                   <Input
                     type="email"
                     placeholder="e.g. priya@email.com"
-                    className="text-base h-12"
+                    className="text-base h-14"
                     value={form.customerEmail}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, customerEmail: e.target.value }))
@@ -686,91 +783,148 @@ export default function CustomerPortal() {
                   />
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold">
-                      Type of Event *
-                    </Label>
-                    <Select
-                      value={form.eventType}
-                      onValueChange={(v) =>
-                        setForm((f) => ({ ...f, eventType: v }))
-                      }
-                    >
-                      <SelectTrigger className="h-12 text-base">
-                        <SelectValue placeholder="Select event type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {EVENT_TYPES.map((e) => (
-                          <SelectItem
-                            key={e.value}
-                            value={e.value}
-                            className="text-base"
-                          >
-                            {e.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold">
-                      Select Hall *
-                    </Label>
-                    <Select
-                      value={form.hallId}
-                      onValueChange={(v) =>
-                        setForm((f) => ({ ...f, hallId: v }))
-                      }
-                    >
-                      <SelectTrigger className="h-12 text-base">
-                        <SelectValue placeholder="Select a hall" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {halls.map((h) => (
-                          <SelectItem
-                            key={h.id.toString()}
-                            value={h.id.toString()}
-                            className="text-base"
-                          >
-                            {h.name} ({h.capacity.toString()} seats)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Event Type */}
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">
+                    Type of Event *
+                  </Label>
+                  <Select
+                    value={form.eventType}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, eventType: v }))
+                    }
+                  >
+                    <SelectTrigger className="h-14 text-base">
+                      <SelectValue placeholder="Select event type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EVENT_TYPES.map((e) => (
+                        <SelectItem
+                          key={e.value}
+                          value={e.value}
+                          className="text-base py-3"
+                        >
+                          {e.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold">
-                      Event Date *
-                    </Label>
-                    <Input
-                      type="date"
-                      className="text-base h-12"
-                      value={form.eventDate}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, eventDate: e.target.value }))
-                      }
-                      min={new Date().toISOString().split("T")[0]}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-base font-semibold">
-                      Number of Guests
-                    </Label>
-                    <Input
-                      type="number"
-                      placeholder="e.g. 200"
-                      className="text-base h-12"
-                      value={form.guestCount}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, guestCount: e.target.value }))
-                      }
-                      min="1"
-                    />
-                  </div>
+                {/* Hall selector */}
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">
+                    Select Hall *
+                  </Label>
+                  {hallsLoading ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <Skeleton key={i} className="h-40 rounded-xl" />
+                      ))}
+                    </div>
+                  ) : halls.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No halls available yet. Please check back shortly.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {halls.map((h) => {
+                        const isSelected = form.hallId === h.id.toString();
+                        return (
+                          <motion.button
+                            type="button"
+                            key={h.id.toString()}
+                            onClick={() =>
+                              setForm((f) => ({
+                                ...f,
+                                hallId: h.id.toString(),
+                              }))
+                            }
+                            whileTap={{ scale: 0.97 }}
+                            className={`relative rounded-xl overflow-hidden text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
+                              isSelected
+                                ? "ring-2 ring-gold shadow-gold shadow-md"
+                                : "ring-1 ring-border hover:ring-gold/50"
+                            }`}
+                          >
+                            <div className="relative h-24 overflow-hidden">
+                              <img
+                                src={getHallImage(h.name)}
+                                alt={h.name}
+                                className="w-full h-full object-cover"
+                              />
+                              {isSelected && (
+                                <div className="absolute inset-0 bg-maroon/20" />
+                              )}
+                              {isSelected && (
+                                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gold flex items-center justify-center shadow">
+                                  <CheckCircle className="h-3 w-3 text-maroon" />
+                                </div>
+                              )}
+                              <div className="absolute bottom-1.5 left-2">
+                                <span className="bg-maroon/90 text-gold text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                  ₹{h.pricePerHead.toString()}/head
+                                </span>
+                              </div>
+                            </div>
+                            <div
+                              className={`p-2 transition-colors ${
+                                isSelected
+                                  ? "bg-gold/10 border-t border-gold/30"
+                                  : "bg-card border-t border-border"
+                              }`}
+                            >
+                              <p
+                                className={`font-display font-semibold text-xs leading-tight mb-0.5 ${
+                                  isSelected ? "text-maroon" : "text-foreground"
+                                }`}
+                              >
+                                {h.name}
+                              </p>
+                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <Users className="h-2.5 w-2.5" />
+                                <span>{h.capacity.toString()} seats</span>
+                              </div>
+                            </div>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Date */}
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">
+                    Event Date *
+                  </Label>
+                  <Input
+                    type="date"
+                    className="text-base h-14"
+                    value={form.eventDate}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, eventDate: e.target.value }))
+                    }
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+
+                {/* Guests */}
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">
+                    Number of Guests
+                  </Label>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="e.g. 200"
+                    className="text-base h-14"
+                    value={form.guestCount}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, guestCount: e.target.value }))
+                    }
+                    min="1"
+                  />
                 </div>
 
                 {menuItems.length > 0 && (
@@ -778,16 +932,17 @@ export default function CustomerPortal() {
                     <Label className="text-base font-semibold">
                       Menu Selections (Optional)
                     </Label>
-                    <div className="grid sm:grid-cols-2 gap-2 border rounded-lg p-4 bg-muted/30 max-h-48 overflow-y-auto">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-lg p-4 bg-muted/30 max-h-48 overflow-y-auto">
                       {menuItems.map((item) => (
                         <div
                           key={item.id.toString()}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-3 py-1"
                         >
                           <Checkbox
                             id={`menu-${item.id}`}
                             checked={selectedMenuItems.includes(item.id)}
                             onCheckedChange={() => handleMenuToggle(item.id)}
+                            className="h-5 w-5"
                           />
                           <label
                             htmlFor={`menu-${item.id}`}
@@ -801,6 +956,7 @@ export default function CustomerPortal() {
                   </div>
                 )}
 
+                {/* Notes */}
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">
                     Special Notes / Requirements
@@ -818,10 +974,14 @@ export default function CustomerPortal() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={createBooking.isPending}
+                  disabled={createBooking.isPending || actorLoading}
                   className="w-full bg-maroon text-white text-lg h-14 font-bold hover:bg-maroon/90"
                 >
-                  {createBooking.isPending ? (
+                  {actorLoading ? (
+                    <span className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 animate-spin" /> Connecting...
+                    </span>
+                  ) : createBooking.isPending ? (
                     <span className="flex items-center gap-2">
                       <Clock className="h-5 w-5 animate-spin" /> Processing...
                     </span>
@@ -839,28 +999,30 @@ export default function CustomerPortal() {
 
       {/* MY BOOKING */}
       {activeTab === "mybooking" && (
-        <div className="max-w-3xl mx-auto px-4 py-10">
-          <div className="text-center mb-8">
-            <h2 className="font-display text-4xl text-maroon mb-3">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="text-center mb-6">
+            <h2 className="font-display text-3xl sm:text-4xl text-maroon mb-2">
               Track Your Booking
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground">
               Enter your Booking ID to view your event details
             </p>
           </div>
 
-          <Card className="shadow-royal mb-6">
-            <CardContent className="p-6">
-              <div className="flex gap-3">
+          <Card className="shadow-royal mb-5">
+            <CardContent className="p-5">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Input
                   placeholder="Enter Booking ID (e.g. 1)"
-                  className="text-lg h-12"
+                  className="text-base h-14 flex-1"
+                  inputMode="numeric"
                   value={lookupId}
                   onChange={(e) => setLookupId(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLookup()}
                 />
                 <Button
                   onClick={handleLookup}
-                  className="bg-maroon text-white h-12 px-6"
+                  className="bg-maroon text-white h-14 px-6 w-full sm:w-auto"
                 >
                   <Search className="h-5 w-5 mr-2" /> Search
                 </Button>
@@ -873,14 +1035,14 @@ export default function CustomerPortal() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Card className="shadow-royal mb-6">
+              <Card className="shadow-royal mb-5">
                 <CardHeader>
                   <CardTitle className="font-display text-2xl text-maroon">
                     Booking Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
+                <CardContent className="p-5 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">
                         Booking ID
@@ -906,26 +1068,20 @@ export default function CustomerPortal() {
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Customer Name
-                      </p>
-                      <p className="font-semibold text-base">
+                      <p className="text-sm text-muted-foreground">Customer</p>
+                      <p className="font-semibold">
                         {foundBooking.customerName}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Event Type
-                      </p>
-                      <p className="font-semibold text-base capitalize">
+                      <p className="text-sm text-muted-foreground">Event</p>
+                      <p className="font-semibold capitalize">
                         {foundBooking.eventType}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Event Date
-                      </p>
-                      <p className="font-semibold text-base">
+                      <p className="text-sm text-muted-foreground">Date</p>
+                      <p className="font-semibold text-sm">
                         {new Date(
                           Number(foundBooking.eventDate) / 1_000_000,
                         ).toLocaleDateString("en-IN", {
@@ -937,15 +1093,13 @@ export default function CustomerPortal() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Guests</p>
-                      <p className="font-semibold text-base">
-                        {foundBooking.guestCount.toString()} guests
+                      <p className="font-semibold">
+                        {foundBooking.guestCount.toString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">
-                        Payment Status
-                      </p>
-                      <Badge variant="outline">
+                      <p className="text-sm text-muted-foreground">Payment</p>
+                      <Badge variant="outline" className="text-xs">
                         {foundBooking.paymentStatus
                           .replace("_", " ")
                           .toUpperCase()}
@@ -972,18 +1126,22 @@ export default function CustomerPortal() {
                       Share Your Experience
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 space-y-4">
+                  <CardContent className="p-5 space-y-4">
                     <div>
                       <Label className="text-base font-semibold mb-2 block">
                         Your Rating
                       </Label>
-                      <div className="flex gap-2">
+                      <div className="flex gap-3">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             type="button"
                             key={star}
                             onClick={() => setFeedbackRating(star)}
-                            className={`text-3xl transition-colors ${star <= feedbackRating ? "text-gold" : "text-muted-foreground"}`}
+                            className={`text-4xl transition-colors touch-manipulation ${
+                              star <= feedbackRating
+                                ? "text-gold"
+                                : "text-muted-foreground"
+                            }`}
                           >
                             ★
                           </button>
@@ -996,13 +1154,13 @@ export default function CustomerPortal() {
                       </Label>
                       <Textarea
                         placeholder="Tell us about your experience..."
-                        className="mt-2"
+                        className="mt-2 text-base"
                         value={feedbackComment}
                         onChange={(e) => setFeedbackComment(e.target.value)}
                       />
                     </div>
                     <Button
-                      className="bg-maroon text-white"
+                      className="bg-maroon text-white h-12 w-full"
                       onClick={handleFeedback}
                       disabled={submitFeedback.isPending}
                     >
@@ -1018,21 +1176,21 @@ export default function CustomerPortal() {
       )}
 
       {/* FOOTER */}
-      <footer className="portal-header mt-20 py-10 text-center text-white/70">
+      <footer className="portal-header mt-12 py-8 text-center text-white/70">
         <div className="max-w-5xl mx-auto px-4">
           <img
             src="/assets/generated/logo-transparent.dim_300x100.png"
             alt="Royal Banquet"
-            className="h-12 mx-auto mb-4"
+            className="h-10 mx-auto mb-4"
           />
-          <div className="flex flex-wrap justify-center gap-6 text-sm mb-4">
-            <span className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 text-sm mb-4">
+            <span className="flex items-center justify-center gap-2">
               <Phone className="h-4 w-4" /> +91 98765 43210
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center justify-center gap-2">
               <Mail className="h-4 w-4" /> events@royalbanquet.in
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center justify-center gap-2">
               <MapPin className="h-4 w-4" /> Mumbai, Maharashtra
             </span>
           </div>
@@ -1054,25 +1212,25 @@ export default function CustomerPortal() {
       <AnimatePresence>
         {bookingConfirmed && (
           <Dialog open={bookingConfirmed} onOpenChange={setBookingConfirmed}>
-            <DialogContent className="sm:max-w-md text-center border-gold/30">
+            <DialogContent className="sm:max-w-md text-center border-gold/30 mx-4">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                className="py-6"
+                className="py-4"
               >
-                <div className="w-20 h-20 rounded-full gold-gradient flex items-center justify-center mx-auto mb-6 animate-celebration">
-                  <CheckCircle className="h-10 w-10 text-maroon" />
+                <div className="w-16 h-16 rounded-full gold-gradient flex items-center justify-center mx-auto mb-5 animate-celebration">
+                  <CheckCircle className="h-8 w-8 text-maroon" />
                 </div>
                 <DialogHeader>
-                  <DialogTitle className="font-display text-3xl text-maroon text-center mb-2">
+                  <DialogTitle className="font-display text-2xl text-maroon text-center mb-2">
                     Booking Confirmed! 🎉
                   </DialogTitle>
                 </DialogHeader>
-                <p className="text-lg text-foreground mt-4 mb-2">
+                <p className="text-base text-foreground mt-3 mb-2">
                   Your booking has been successfully received.
                 </p>
-                <p className="text-muted-foreground mb-2">
+                <p className="text-muted-foreground text-sm mb-2">
                   A member of our team will call you shortly to confirm all
                   details and answer your questions.
                 </p>

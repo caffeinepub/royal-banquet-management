@@ -1,13 +1,20 @@
 import { Toaster } from "@/components/ui/sonner";
+import { Briefcase, ChefHat, Crown, Home } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSeedData } from "./hooks/useSeedData";
 import CustomerPortal from "./pages/CustomerPortal";
 import ManagerPortal from "./pages/ManagerPortal";
 import OwnerPortal from "./pages/OwnerPortal";
-import RoleSelector from "./pages/RoleSelector";
 import StaffPortal from "./pages/StaffPortal";
 
-type Route = "/" | "/manager" | "/staff" | "/owner" | "/select";
+type Route = "/" | "/manager" | "/staff" | "/owner";
+
+const NAV_ITEMS = [
+  { path: "/" as Route, label: "Customer", icon: Home },
+  { path: "/manager" as Route, label: "Manager", icon: Briefcase },
+  { path: "/staff" as Route, label: "Kitchen", icon: ChefHat },
+  { path: "/owner" as Route, label: "Owner", icon: Crown },
+];
 
 function App() {
   const [currentRoute, setCurrentRoute] = useState<Route>(() => {
@@ -15,19 +22,15 @@ function App() {
     if (path === "/manager") return "/manager";
     if (path === "/staff") return "/staff";
     if (path === "/owner") return "/owner";
-    if (path === "/") return "/";
     return "/";
   });
 
-  // Seed sample data on first load
   useSeedData();
 
-  // Update browser URL on route change
   useEffect(() => {
     window.history.pushState({}, "", currentRoute);
   }, [currentRoute]);
 
-  // Handle browser back/forward
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname as Route;
@@ -37,8 +40,8 @@ function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const navigate = (path: string) => {
-    setCurrentRoute(path as Route);
+  const navigate = (path: Route) => {
+    setCurrentRoute(path);
   };
 
   const renderRoute = () => {
@@ -58,36 +61,43 @@ function App() {
 
   return (
     <>
-      {/* Portal switch nav - small floating buttons */}
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
-        <div className="bg-card border border-border rounded-xl shadow-royal p-2 flex flex-col gap-1">
-          <p className="text-xs text-muted-foreground text-center font-semibold mb-1 px-2">
-            Switch Portal
-          </p>
-          {[
-            { path: "/", label: "Customer", emoji: "🎉" },
-            { path: "/manager", label: "Manager", emoji: "👔" },
-            { path: "/staff", label: "Staff", emoji: "🍳" },
-            { path: "/owner", label: "Owner", emoji: "👑" },
-          ].map(({ path, label, emoji }) => (
-            <button
-              type="button"
-              key={path}
-              onClick={() => navigate(path)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                currentRoute === path
-                  ? "bg-maroon text-white font-semibold"
-                  : "hover:bg-muted text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <span>{emoji}</span>
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Main content — padded at bottom to clear the nav bar */}
+      <div className="pb-16">{renderRoute()}</div>
 
-      {renderRoute()}
+      {/* Mobile bottom navigation bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-[200] portal-header shadow-[0_-2px_12px_rgba(0,0,0,0.2)] mobile-bottom-nav">
+        <div className="flex items-stretch">
+          {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
+            const isActive = currentRoute === path;
+            return (
+              <button
+                type="button"
+                key={path}
+                onClick={() => navigate(path)}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] transition-all duration-200 relative ${
+                  isActive ? "text-gold" : "text-white/60 active:text-white/90"
+                }`}
+                aria-label={label}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {isActive && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gold rounded-full" />
+                )}
+                <Icon
+                  className={`h-5 w-5 transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                />
+                <span
+                  className={`text-[10px] font-medium leading-none tracking-wide ${isActive ? "text-gold" : "text-white/60"}`}
+                >
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
       <Toaster richColors position="top-right" />
     </>
   );

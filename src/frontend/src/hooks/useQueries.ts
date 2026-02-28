@@ -239,7 +239,11 @@ export function useCreateBooking() {
       menuSelections: bigint[];
       notes: string;
     }) => {
-      return actor!.createBooking(
+      if (!actor)
+        throw new Error(
+          "Connection not ready. Please wait a moment and try again.",
+        );
+      return actor.createBooking(
         b.customerName,
         b.customerPhone,
         b.customerEmail,

@@ -61,6 +61,30 @@ export function useSeedData() {
             "Professional setup for corporate events, conferences and seminars",
             500n,
           ),
+          actor.createHall(
+            branchId,
+            "Crystal Banquet",
+            400n,
+            400n,
+            "Opulent hall adorned with sparkling crystal chandeliers, silver and white decor, perfect for grand weddings and galas",
+            900n,
+          ),
+          actor.createHall(
+            branchId,
+            "Garden Lounge",
+            250n,
+            250n,
+            "Open-air garden pavilion with fairy lights and lush tropical greenery, ideal for romantic receptions and outdoor celebrations",
+            700n,
+          ),
+          actor.createHall(
+            branchId,
+            "Lotus Terrace",
+            180n,
+            180n,
+            "Elegant terrace hall with a lotus flower theme, soft pink and gold palette, perfect for intimate ceremonies and cultural events",
+            650n,
+          ),
         ]);
 
         // Create menu categories

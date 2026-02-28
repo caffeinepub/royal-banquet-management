@@ -129,27 +129,34 @@ export default function StaffPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
+          className="w-full max-w-sm"
         >
+          <div className="text-center mb-8">
+            <img
+              src="/assets/generated/logo-transparent.dim_300x100.png"
+              alt="Royal Banquet"
+              className="h-12 mx-auto mb-4"
+            />
+          </div>
           <Card className="shadow-royal border-maroon/10">
-            <CardContent className="p-10 text-center">
-              <div className="w-16 h-16 rounded-full bg-maroon flex items-center justify-center mx-auto mb-6">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-maroon flex items-center justify-center mx-auto mb-5">
                 <ChefHat className="h-8 w-8 text-white" />
               </div>
-              <h1 className="font-display text-3xl text-maroon mb-2">
-                Staff Portal
+              <h1 className="font-display text-2xl text-maroon mb-2">
+                Kitchen & Staff Portal
               </h1>
-              <p className="text-muted-foreground mb-8 text-base">
+              <p className="text-muted-foreground mb-7 text-base">
                 Kitchen & Operations staff access. Please sign in.
               </p>
               <Button
                 onClick={login}
                 disabled={loginStatus === "logging-in"}
-                className="w-full bg-maroon text-white text-lg h-12 font-bold"
+                className="w-full bg-maroon text-white text-lg h-14 font-bold"
               >
                 {loginStatus === "logging-in" ? (
                   <>
@@ -318,23 +325,25 @@ export default function StaffPortal() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="flex flex-wrap h-auto gap-1 mb-6 bg-muted p-1 rounded-xl">
-            {[
-              { id: "schedule", label: "Event Schedule", icon: Calendar },
-              { id: "guests", label: "Guest & Menu", icon: UtensilsCrossed },
-              { id: "stock", label: "Stock Inventory", icon: Package },
-              { id: "request", label: "Request Stock", icon: Send },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="flex items-center gap-2 text-sm py-2 px-4 data-[state=active]:bg-maroon data-[state=active]:text-white"
-              >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 mb-5">
+            <TabsList className="flex h-auto w-max gap-1 bg-muted p-1 rounded-xl min-w-full sm:min-w-0">
+              {[
+                { id: "schedule", label: "Schedule", icon: Calendar },
+                { id: "guests", label: "Guests & Menu", icon: UtensilsCrossed },
+                { id: "stock", label: "Inventory", icon: Package },
+                { id: "request", label: "Request Stock", icon: Send },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="flex items-center gap-1.5 text-sm py-2 px-3 whitespace-nowrap data-[state=active]:bg-maroon data-[state=active]:text-white shrink-0"
+                >
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span>{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           {/* EVENT SCHEDULE */}
           <TabsContent value="schedule">
@@ -550,89 +559,152 @@ export default function StaffPortal() {
 
               {stockLoading ? (
                 <Skeleton className="h-64 rounded-xl" />
+              ) : stock.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12 text-muted-foreground text-lg">
+                    <Package className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                    No stock items found
+                  </CardContent>
+                </Card>
               ) : (
-                <Card className="shadow-royal overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-semibold text-base">
-                            Item Name
-                          </TableHead>
-                          <TableHead className="font-semibold text-base">
-                            Unit
-                          </TableHead>
-                          <TableHead className="font-semibold text-base">
-                            Quantity on Hand
-                          </TableHead>
-                          <TableHead className="font-semibold text-base">
-                            Minimum Required
-                          </TableHead>
-                          <TableHead className="font-semibold text-base">
-                            Status
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {stock.map((s) => {
-                          const isLow = s.quantityOnHand <= s.minimumThreshold;
-                          const isCritical =
-                            s.quantityOnHand <= s.minimumThreshold / 2n;
-                          return (
-                            <TableRow
-                              key={s.id.toString()}
-                              className={
-                                isCritical
-                                  ? "bg-red-50"
-                                  : isLow
-                                    ? "bg-yellow-50"
-                                    : ""
-                              }
-                            >
-                              <TableCell className="font-semibold text-base">
+                <>
+                  {/* Desktop table */}
+                  <Card className="shadow-royal overflow-hidden hidden sm:block">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="font-semibold text-base">
+                              Item Name
+                            </TableHead>
+                            <TableHead className="font-semibold text-base">
+                              Unit
+                            </TableHead>
+                            <TableHead className="font-semibold text-base">
+                              Quantity on Hand
+                            </TableHead>
+                            <TableHead className="font-semibold text-base">
+                              Minimum Required
+                            </TableHead>
+                            <TableHead className="font-semibold text-base">
+                              Status
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {stock.map((s) => {
+                            const isLow =
+                              s.quantityOnHand <= s.minimumThreshold;
+                            const isCritical =
+                              s.quantityOnHand <= s.minimumThreshold / 2n;
+                            return (
+                              <TableRow
+                                key={s.id.toString()}
+                                className={
+                                  isCritical
+                                    ? "bg-red-50"
+                                    : isLow
+                                      ? "bg-yellow-50"
+                                      : ""
+                                }
+                              >
+                                <TableCell className="font-semibold text-base">
+                                  {s.itemName}
+                                </TableCell>
+                                <TableCell className="text-base">
+                                  {s.unit}
+                                </TableCell>
+                                <TableCell>
+                                  <span
+                                    className={`text-xl font-bold ${isCritical ? "text-red-600" : isLow ? "text-yellow-600" : "text-green-700"}`}
+                                  >
+                                    {s.quantityOnHand.toString()}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-base">
+                                  {s.minimumThreshold.toString()}
+                                </TableCell>
+                                <TableCell>
+                                  {isCritical ? (
+                                    <Badge className="bg-red-100 text-red-700 text-sm">
+                                      ⚠️ Critical
+                                    </Badge>
+                                  ) : isLow ? (
+                                    <Badge className="bg-yellow-100 text-yellow-700 text-sm">
+                                      ⚡ Low
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-green-100 text-green-700 text-sm">
+                                      ✓ OK
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+                  {/* Mobile card view */}
+                  <div className="space-y-3 sm:hidden">
+                    {stock.map((s) => {
+                      const isLow = s.quantityOnHand <= s.minimumThreshold;
+                      const isCritical =
+                        s.quantityOnHand <= s.minimumThreshold / 2n;
+                      return (
+                        <Card
+                          key={s.id.toString()}
+                          className={`shadow-royal ${isCritical ? "border-red-200" : isLow ? "border-yellow-200" : ""}`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="font-semibold text-base">
                                 {s.itemName}
-                              </TableCell>
-                              <TableCell className="text-base">
-                                {s.unit}
-                              </TableCell>
-                              <TableCell>
-                                <span
+                              </p>
+                              {isCritical ? (
+                                <Badge className="bg-red-100 text-red-700">
+                                  ⚠️ Critical
+                                </Badge>
+                              ) : isLow ? (
+                                <Badge className="bg-yellow-100 text-yellow-700">
+                                  ⚡ Low
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-green-100 text-green-700">
+                                  ✓ OK
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex gap-4 text-sm">
+                              <div>
+                                <p className="text-muted-foreground text-xs">
+                                  On Hand
+                                </p>
+                                <p
                                   className={`text-xl font-bold ${isCritical ? "text-red-600" : isLow ? "text-yellow-600" : "text-green-700"}`}
                                 >
-                                  {s.quantityOnHand.toString()}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-base">
-                                {s.minimumThreshold.toString()}
-                              </TableCell>
-                              <TableCell>
-                                {isCritical ? (
-                                  <Badge className="bg-red-100 text-red-700 text-sm">
-                                    ⚠️ Critical
-                                  </Badge>
-                                ) : isLow ? (
-                                  <Badge className="bg-yellow-100 text-yellow-700 text-sm">
-                                    ⚡ Low
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-green-100 text-green-700 text-sm">
-                                    ✓ OK
-                                  </Badge>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                                  {s.quantityOnHand.toString()}{" "}
+                                  <span className="text-sm font-normal text-muted-foreground">
+                                    {s.unit}
+                                  </span>
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs">
+                                  Min Required
+                                </p>
+                                <p className="text-xl font-bold text-foreground">
+                                  {s.minimumThreshold.toString()}
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
-                  {stock.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground text-lg">
-                      <Package className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                      No stock items found
-                    </div>
-                  )}
-                </Card>
+                </>
               )}
 
               {/* Record Stock Usage */}
@@ -811,60 +883,100 @@ export default function StaffPortal() {
                 <h3 className="font-display text-xl text-maroon mb-4">
                   My Previous Requests
                 </h3>
-                <Card className="shadow-royal overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="text-base font-semibold">
-                            Item
-                          </TableHead>
-                          <TableHead className="text-base font-semibold">
-                            Qty
-                          </TableHead>
-                          <TableHead className="text-base font-semibold">
-                            Reason
-                          </TableHead>
-                          <TableHead className="text-base font-semibold">
-                            Status
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {stockRequests.map((r) => (
-                          <TableRow key={r.id.toString()}>
-                            <TableCell className="font-semibold text-base">
-                              {r.itemName}
-                            </TableCell>
-                            <TableCell className="text-base">
-                              {r.quantityRequested.toString()}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {r.reason}
-                            </TableCell>
-                            <TableCell>
+                {stockRequests.length === 0 ? (
+                  <Card>
+                    <CardContent className="text-center py-12 text-muted-foreground">
+                      No requests sent yet
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {/* Desktop table */}
+                    <Card className="shadow-royal overflow-hidden hidden sm:block">
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/50">
+                              <TableHead className="text-base font-semibold">
+                                Item
+                              </TableHead>
+                              <TableHead className="text-base font-semibold">
+                                Qty
+                              </TableHead>
+                              <TableHead className="text-base font-semibold">
+                                Reason
+                              </TableHead>
+                              <TableHead className="text-base font-semibold">
+                                Status
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {stockRequests.map((r) => (
+                              <TableRow key={r.id.toString()}>
+                                <TableCell className="font-semibold text-base">
+                                  {r.itemName}
+                                </TableCell>
+                                <TableCell className="text-base">
+                                  {r.quantityRequested.toString()}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {r.reason}
+                                </TableCell>
+                                <TableCell>
+                                  {r.status === "approved" ? (
+                                    <Badge className="bg-green-100 text-green-700 text-base py-1 px-3">
+                                      <CheckCircle className="h-4 w-4 mr-1" />{" "}
+                                      Approved
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-yellow-100 text-yellow-700 text-base py-1 px-3">
+                                      <Clock className="h-4 w-4 mr-1" /> Pending
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </Card>
+                    {/* Mobile card view */}
+                    <div className="space-y-3 sm:hidden">
+                      {stockRequests.map((r) => (
+                        <Card key={r.id.toString()} className="shadow-royal">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-semibold text-base">
+                                  {r.itemName}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  Qty: {r.quantityRequested.toString()}
+                                </p>
+                                {r.reason && (
+                                  <p className="text-sm text-muted-foreground italic mt-1">
+                                    "{r.reason}"
+                                  </p>
+                                )}
+                              </div>
                               {r.status === "approved" ? (
-                                <Badge className="bg-green-100 text-green-700 text-base py-1 px-3">
-                                  <CheckCircle className="h-4 w-4 mr-1" />{" "}
+                                <Badge className="bg-green-100 text-green-700">
+                                  <CheckCircle className="h-3 w-3 mr-1" />{" "}
                                   Approved
                                 </Badge>
                               ) : (
-                                <Badge className="bg-yellow-100 text-yellow-700 text-base py-1 px-3">
-                                  <Clock className="h-4 w-4 mr-1" /> Pending
+                                <Badge className="bg-yellow-100 text-yellow-700">
+                                  <Clock className="h-3 w-3 mr-1" /> Pending
                                 </Badge>
                               )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {stockRequests.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground text-lg">
-                      No requests sent yet
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  )}
-                </Card>
+                  </>
+                )}
               </div>
             </div>
           </TabsContent>

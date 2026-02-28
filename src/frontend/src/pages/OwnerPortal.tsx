@@ -119,31 +119,38 @@ export default function OwnerPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
+          className="w-full max-w-sm"
         >
+          <div className="text-center mb-8">
+            <img
+              src="/assets/generated/logo-transparent.dim_300x100.png"
+              alt="Royal Banquet"
+              className="h-12 mx-auto mb-4"
+            />
+          </div>
           <Card className="shadow-royal border-maroon/10">
-            <CardContent className="p-10 text-center">
-              <div className="w-16 h-16 rounded-full bg-maroon flex items-center justify-center mx-auto mb-6">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-maroon flex items-center justify-center mx-auto mb-5">
                 <Crown className="h-8 w-8 text-gold" />
               </div>
-              <h1 className="font-display text-3xl text-maroon mb-2">
-                Owner Portal
+              <h1 className="font-display text-2xl text-maroon mb-2">
+                Owner Dashboard
               </h1>
-              <p className="text-muted-foreground mb-3 text-base">
+              <p className="text-muted-foreground mb-2 text-base">
                 Super Admin access only.
               </p>
-              <p className="text-sm text-muted-foreground mb-8">
+              <p className="text-sm text-muted-foreground mb-7">
                 This portal is restricted to the owner/super admin of Royal
                 Banquet.
               </p>
               <Button
                 onClick={login}
                 disabled={loginStatus === "logging-in"}
-                className="w-full bg-maroon text-white text-lg h-12 font-bold"
+                className="w-full bg-maroon text-white text-lg h-14 font-bold"
               >
                 {loginStatus === "logging-in" ? (
                   <>
@@ -351,26 +358,27 @@ export default function OwnerPortal() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="flex flex-wrap h-auto gap-1 mb-6 bg-muted p-1 rounded-xl">
-            {[
-              { id: "revenue", label: "Revenue Analytics", icon: BarChart3 },
-              { id: "performance", label: "Performance", icon: TrendingUp },
-              { id: "payments", label: "Payment Reports", icon: CreditCard },
-              { id: "branches", label: "Branches", icon: Building2 },
-              { id: "staff", label: "Staff Mgmt", icon: Users },
-              { id: "pricing", label: "Pricing Control", icon: Settings },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="flex items-center gap-2 text-sm py-2 px-3 data-[state=active]:bg-maroon data-[state=active]:text-white"
-              >
-                <tab.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 mb-5">
+            <TabsList className="flex h-auto w-max gap-1 bg-muted p-1 rounded-xl min-w-full sm:min-w-0">
+              {[
+                { id: "revenue", label: "Revenue", icon: BarChart3 },
+                { id: "performance", label: "Performance", icon: TrendingUp },
+                { id: "payments", label: "Payments", icon: CreditCard },
+                { id: "branches", label: "Branches", icon: Building2 },
+                { id: "staff", label: "Staff", icon: Users },
+                { id: "pricing", label: "Pricing", icon: Settings },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="flex items-center gap-1.5 text-sm py-2 px-3 whitespace-nowrap data-[state=active]:bg-maroon data-[state=active]:text-white shrink-0"
+                >
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span>{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           {/* REVENUE ANALYTICS */}
           <TabsContent value="revenue">
@@ -686,60 +694,99 @@ export default function OwnerPortal() {
 
               {paymentsLoading ? (
                 <Skeleton className="h-64 rounded-xl" />
-              ) : (
-                <Card className="shadow-royal overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-semibold">
-                            Payment #
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Booking ID
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Amount
-                          </TableHead>
-                          <TableHead className="font-semibold">Type</TableHead>
-                          <TableHead className="font-semibold">
-                            Method
-                          </TableHead>
-                          <TableHead className="font-semibold">Date</TableHead>
-                          <TableHead className="font-semibold">Notes</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {payments.map((p) => (
-                          <TableRow key={p.id.toString()}>
-                            <TableCell>#{p.id.toString()}</TableCell>
-                            <TableCell>
-                              Booking #{p.bookingId.toString()}
-                            </TableCell>
-                            <TableCell className="font-bold text-maroon text-lg">
-                              ₹{p.amount.toString()}
-                            </TableCell>
-                            <TableCell className="capitalize">
-                              {p.paymentType.replace("_", " ")}
-                            </TableCell>
-                            <TableCell className="capitalize">
-                              {p.method.replace("_", " ")}
-                            </TableCell>
-                            <TableCell>{formatDate(p.paymentDate)}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {p.notes || "—"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {payments.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      No payments recorded yet
-                    </div>
-                  )}
+              ) : payments.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12 text-muted-foreground">
+                    No payments recorded yet
+                  </CardContent>
                 </Card>
+              ) : (
+                <>
+                  {/* Desktop table */}
+                  <Card className="shadow-royal overflow-hidden hidden sm:block">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="font-semibold">
+                              Payment #
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Booking ID
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Amount
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Type
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Method
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Date
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Notes
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {payments.map((p) => (
+                            <TableRow key={p.id.toString()}>
+                              <TableCell>#{p.id.toString()}</TableCell>
+                              <TableCell>
+                                Booking #{p.bookingId.toString()}
+                              </TableCell>
+                              <TableCell className="font-bold text-maroon text-lg">
+                                ₹{p.amount.toString()}
+                              </TableCell>
+                              <TableCell className="capitalize">
+                                {p.paymentType.replace("_", " ")}
+                              </TableCell>
+                              <TableCell className="capitalize">
+                                {p.method.replace("_", " ")}
+                              </TableCell>
+                              <TableCell>{formatDate(p.paymentDate)}</TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {p.notes || "—"}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+                  {/* Mobile card view */}
+                  <div className="space-y-3 sm:hidden">
+                    {payments.map((p) => (
+                      <Card key={p.id.toString()} className="shadow-royal">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="font-bold text-maroon text-xl">
+                                ₹{p.amount.toString()}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Booking #{p.bookingId.toString()}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="capitalize">
+                              {p.method.replace("_", " ")}
+                            </Badge>
+                          </div>
+                          <div className="flex gap-4 text-sm text-muted-foreground">
+                            <span className="capitalize">
+                              {p.paymentType.replace("_", " ")}
+                            </span>
+                            <span>·</span>
+                            <span>{formatDate(p.paymentDate)}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </TabsContent>
@@ -1025,84 +1072,154 @@ export default function OwnerPortal() {
 
               {staffLoading ? (
                 <Skeleton className="h-64 rounded-xl" />
-              ) : (
-                <Card className="shadow-royal overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-semibold">Name</TableHead>
-                          <TableHead className="font-semibold">Role</TableHead>
-                          <TableHead className="font-semibold">
-                            Branch
-                          </TableHead>
-                          <TableHead className="font-semibold">Phone</TableHead>
-                          <TableHead className="font-semibold">Email</TableHead>
-                          <TableHead className="font-semibold">
-                            Status
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Actions
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {staff.map((s) => {
-                          const branch = branches.find(
-                            (b) => b.id === s.branchId,
-                          );
-                          return (
-                            <TableRow key={s.id.toString()}>
-                              <TableCell className="font-semibold">
-                                {s.name}
-                              </TableCell>
-                              <TableCell className="capitalize">
-                                {s.role.replace("_", " ")}
-                              </TableCell>
-                              <TableCell>
-                                {branch?.name || `Branch #${s.branchId}`}
-                              </TableCell>
-                              <TableCell>{s.phone}</TableCell>
-                              <TableCell>{s.email}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Switch
-                                    checked={s.isActive}
-                                    onCheckedChange={() => handleToggleStaff(s)}
-                                  />
-                                  <Badge
-                                    className={
-                                      s.isActive
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-red-100 text-red-700"
-                                    }
-                                  >
-                                    {s.isActive ? "Active" : "Inactive"}
-                                  </Badge>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  onClick={() => handleDeleteStaff(s.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {staff.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      No staff members added yet
-                    </div>
-                  )}
+              ) : staff.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12 text-muted-foreground">
+                    No staff members added yet
+                  </CardContent>
                 </Card>
+              ) : (
+                <>
+                  {/* Desktop table */}
+                  <Card className="shadow-royal overflow-hidden hidden sm:block">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="font-semibold">
+                              Name
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Role
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Branch
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Phone
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Email
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Status
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Actions
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {staff.map((s) => {
+                            const branch = branches.find(
+                              (b) => b.id === s.branchId,
+                            );
+                            return (
+                              <TableRow key={s.id.toString()}>
+                                <TableCell className="font-semibold">
+                                  {s.name}
+                                </TableCell>
+                                <TableCell className="capitalize">
+                                  {s.role.replace("_", " ")}
+                                </TableCell>
+                                <TableCell>
+                                  {branch?.name || `Branch #${s.branchId}`}
+                                </TableCell>
+                                <TableCell>{s.phone}</TableCell>
+                                <TableCell>{s.email}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Switch
+                                      checked={s.isActive}
+                                      onCheckedChange={() =>
+                                        handleToggleStaff(s)
+                                      }
+                                    />
+                                    <Badge
+                                      className={
+                                        s.isActive
+                                          ? "bg-green-100 text-green-700"
+                                          : "bg-red-100 text-red-700"
+                                      }
+                                    >
+                                      {s.isActive ? "Active" : "Inactive"}
+                                    </Badge>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleDeleteStaff(s.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+                  {/* Mobile card view */}
+                  <div className="space-y-3 sm:hidden">
+                    {staff.map((s) => {
+                      const branch = branches.find((b) => b.id === s.branchId);
+                      return (
+                        <Card key={s.id.toString()} className="shadow-royal">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <p className="font-semibold text-base">
+                                  {s.name}
+                                </p>
+                                <p className="text-sm text-muted-foreground capitalize">
+                                  {s.role.replace("_", " ")}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {branch?.name || `Branch #${s.branchId}`}
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-600 hover:bg-red-50"
+                                onClick={() => handleDeleteStaff(s.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center justify-between mt-3">
+                              <div className="text-sm text-muted-foreground">
+                                <p>{s.phone}</p>
+                                <p className="truncate max-w-[160px]">
+                                  {s.email}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Switch
+                                  checked={s.isActive}
+                                  onCheckedChange={() => handleToggleStaff(s)}
+                                />
+                                <Badge
+                                  className={
+                                    s.isActive
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-red-100 text-red-700"
+                                  }
+                                >
+                                  {s.isActive ? "Active" : "Inactive"}
+                                </Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
           </TabsContent>

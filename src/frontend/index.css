@@ -242,6 +242,24 @@
 }
 
 /* ──────────────────────────────────────────────────────────────
+   MOBILE APP UTILITIES
+   ──────────────────────────────────────────────────────────── */
+
+html, body, #root {
+  overscroll-behavior: none;
+}
+
+/* Safe area bottom padding for iOS home bar */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Mobile bottom nav */
+.mobile-bottom-nav {
+  padding-bottom: max(0.25rem, env(safe-area-inset-bottom));
+}
+
+/* ──────────────────────────────────────────────────────────────
    SCROLLBAR STYLING
    ──────────────────────────────────────────────────────────── */
 

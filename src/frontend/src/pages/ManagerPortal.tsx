@@ -178,27 +178,34 @@ export default function ManagerPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
+          className="w-full max-w-sm"
         >
+          <div className="text-center mb-8">
+            <img
+              src="/assets/generated/logo-transparent.dim_300x100.png"
+              alt="Royal Banquet"
+              className="h-12 mx-auto mb-4"
+            />
+          </div>
           <Card className="shadow-royal border-maroon/10">
-            <CardContent className="p-10 text-center">
-              <div className="w-16 h-16 rounded-full bg-maroon flex items-center justify-center mx-auto mb-6">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-maroon flex items-center justify-center mx-auto mb-5">
                 <UserCheck className="h-8 w-8 text-white" />
               </div>
-              <h1 className="font-display text-3xl text-maroon mb-2">
+              <h1 className="font-display text-2xl text-maroon mb-2">
                 Manager Portal
               </h1>
-              <p className="text-muted-foreground mb-8 text-base">
+              <p className="text-muted-foreground mb-7 text-base">
                 Branch Manager access only. Please sign in to continue.
               </p>
               <Button
                 onClick={login}
                 disabled={loginStatus === "logging-in"}
-                className="w-full bg-maroon text-white text-lg h-12 font-bold"
+                className="w-full bg-maroon text-white text-lg h-14 font-bold"
               >
                 {loginStatus === "logging-in" ? (
                   <>
@@ -440,29 +447,31 @@ export default function ManagerPortal() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="flex flex-wrap h-auto gap-1 mb-6 bg-muted p-1 rounded-xl">
-            {[
-              { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-              { id: "bookings", label: "Bookings", icon: BookOpen },
-              { id: "leads", label: "Leads", icon: Users },
-              { id: "halls", label: "Halls", icon: Building },
-              { id: "vendors", label: "Vendors", icon: UserCheck },
-              { id: "invoices", label: "Invoices", icon: FileText },
-              { id: "requests", label: "Staff Requests", icon: Package },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="flex items-center gap-2 text-sm py-2 px-3 data-[state=active]:bg-maroon data-[state=active]:text-white"
-              >
-                <tab.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          {/* Horizontally scrollable tab bar */}
+          <div className="overflow-x-auto -mx-4 px-4 mb-5">
+            <TabsList className="flex h-auto w-max gap-1 bg-muted p-1 rounded-xl min-w-full sm:min-w-0">
+              {[
+                { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+                { id: "bookings", label: "Bookings", icon: BookOpen },
+                { id: "leads", label: "Leads", icon: Users },
+                { id: "halls", label: "Halls", icon: Building },
+                { id: "vendors", label: "Vendors", icon: UserCheck },
+                { id: "invoices", label: "Invoices", icon: FileText },
+                { id: "requests", label: "Requests", icon: Package },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="flex items-center gap-1.5 text-sm py-2 px-3 whitespace-nowrap data-[state=active]:bg-maroon data-[state=active]:text-white shrink-0"
+                >
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span>{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           {/* DASHBOARD */}
           <TabsContent value="dashboard">
@@ -922,91 +931,161 @@ export default function ManagerPortal() {
 
               {leadsLoading ? (
                 <Skeleton className="h-64 rounded-xl" />
-              ) : (
-                <Card className="shadow-royal overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-semibold">Name</TableHead>
-                          <TableHead className="font-semibold">Phone</TableHead>
-                          <TableHead className="font-semibold">
-                            Event Type
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Visit Date
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Status
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Actions
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {leads.map((lead) => (
-                          <TableRow key={lead.id.toString()}>
-                            <TableCell>
-                              <div>
-                                <p className="font-semibold">{lead.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {lead.email}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>{lead.phone}</TableCell>
-                            <TableCell className="capitalize">
-                              {lead.eventType}
-                            </TableCell>
-                            <TableCell>{formatDate(lead.visitDate)}</TableCell>
-                            <TableCell>
-                              <Badge
-                                className={STATUS_COLORS[lead.status] || ""}
-                              >
-                                {lead.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={lead.status}
-                                onValueChange={(v) =>
-                                  handleUpdateLeadStatus(lead, v)
-                                }
-                              >
-                                <SelectTrigger className="h-8 w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {[
-                                    "new",
-                                    "contacted",
-                                    "visited",
-                                    "converted",
-                                    "lost",
-                                  ].map((s) => (
-                                    <SelectItem
-                                      key={s}
-                                      value={s}
-                                      className="capitalize"
-                                    >
-                                      {s}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {leads.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      No leads yet. Add your first lead!
-                    </div>
-                  )}
+              ) : leads.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12 text-muted-foreground">
+                    No leads yet. Add your first lead!
+                  </CardContent>
                 </Card>
+              ) : (
+                <>
+                  {/* Desktop table */}
+                  <Card className="shadow-royal overflow-hidden hidden sm:block">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="font-semibold">
+                              Name
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Phone
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Event Type
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Visit Date
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Status
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Actions
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {leads.map((lead) => (
+                            <TableRow key={lead.id.toString()}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-semibold">{lead.name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {lead.email}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>{lead.phone}</TableCell>
+                              <TableCell className="capitalize">
+                                {lead.eventType}
+                              </TableCell>
+                              <TableCell>
+                                {formatDate(lead.visitDate)}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={STATUS_COLORS[lead.status] || ""}
+                                >
+                                  {lead.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={lead.status}
+                                  onValueChange={(v) =>
+                                    handleUpdateLeadStatus(lead, v)
+                                  }
+                                >
+                                  <SelectTrigger className="h-8 w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {[
+                                      "new",
+                                      "contacted",
+                                      "visited",
+                                      "converted",
+                                      "lost",
+                                    ].map((s) => (
+                                      <SelectItem
+                                        key={s}
+                                        value={s}
+                                        className="capitalize"
+                                      >
+                                        {s}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+                  {/* Mobile card view */}
+                  <div className="space-y-3 sm:hidden">
+                    {leads.map((lead) => (
+                      <Card key={lead.id.toString()} className="shadow-royal">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <p className="font-semibold text-base">
+                                {lead.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {lead.email}
+                              </p>
+                              <p className="text-sm flex items-center gap-1 mt-1">
+                                <Phone className="h-3 w-3" /> {lead.phone}
+                              </p>
+                            </div>
+                            <Badge className={STATUS_COLORS[lead.status] || ""}>
+                              {lead.status}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="text-sm text-muted-foreground">
+                              <span className="capitalize">
+                                {lead.eventType}
+                              </span>{" "}
+                              · {formatDate(lead.visitDate)}
+                            </div>
+                            <Select
+                              value={lead.status}
+                              onValueChange={(v) =>
+                                handleUpdateLeadStatus(lead, v)
+                              }
+                            >
+                              <SelectTrigger className="h-9 w-28 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[
+                                  "new",
+                                  "contacted",
+                                  "visited",
+                                  "converted",
+                                  "lost",
+                                ].map((s) => (
+                                  <SelectItem
+                                    key={s}
+                                    value={s}
+                                    className="capitalize"
+                                  >
+                                    {s}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </TabsContent>
@@ -1604,81 +1683,140 @@ export default function ManagerPortal() {
               </h2>
               {requestsLoading ? (
                 <Skeleton className="h-64 rounded-xl" />
-              ) : (
-                <Card className="shadow-royal overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-semibold">
-                            Item Name
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Quantity Requested
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Reason
-                          </TableHead>
-                          <TableHead className="font-semibold">Date</TableHead>
-                          <TableHead className="font-semibold">
-                            Status
-                          </TableHead>
-                          <TableHead className="font-semibold">
-                            Action
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {stockRequests.map((r) => (
-                          <TableRow key={r.id.toString()}>
-                            <TableCell className="font-semibold">
-                              {r.itemName}
-                            </TableCell>
-                            <TableCell>
-                              {r.quantityRequested.toString()}
-                            </TableCell>
-                            <TableCell>{r.reason}</TableCell>
-                            <TableCell>{formatDate(r.createdAt)}</TableCell>
-                            <TableCell>
-                              <Badge
-                                className={
-                                  r.status === "approved"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-yellow-100 text-yellow-700"
-                                }
-                              >
-                                {r.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {r.status === "pending" && (
-                                <Button
-                                  size="sm"
-                                  className="bg-green-600 text-white hover:bg-green-700"
-                                  onClick={() => handleApproveRequest(r.id)}
-                                  disabled={approveRequest.isPending}
-                                >
-                                  <Check className="h-3 w-3 mr-1" /> Approve
-                                </Button>
-                              )}
-                              {r.status === "approved" && (
-                                <span className="text-green-600 font-medium text-sm">
-                                  ✓ Approved
-                                </span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {stockRequests.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground text-lg">
-                      No stock requests yet. Staff will send requests when they
-                      need supplies.
-                    </div>
-                  )}
+              ) : stockRequests.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12 text-muted-foreground">
+                    No stock requests yet. Staff will send requests when they
+                    need supplies.
+                  </CardContent>
                 </Card>
+              ) : (
+                <>
+                  {/* Desktop table */}
+                  <Card className="shadow-royal overflow-hidden hidden sm:block">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="font-semibold">
+                              Item Name
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Qty Requested
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Reason
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Date
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Status
+                            </TableHead>
+                            <TableHead className="font-semibold">
+                              Action
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {stockRequests.map((r) => (
+                            <TableRow key={r.id.toString()}>
+                              <TableCell className="font-semibold">
+                                {r.itemName}
+                              </TableCell>
+                              <TableCell>
+                                {r.quantityRequested.toString()}
+                              </TableCell>
+                              <TableCell>{r.reason}</TableCell>
+                              <TableCell>{formatDate(r.createdAt)}</TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={
+                                    r.status === "approved"
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-yellow-100 text-yellow-700"
+                                  }
+                                >
+                                  {r.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {r.status === "pending" && (
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600 text-white hover:bg-green-700"
+                                    onClick={() => handleApproveRequest(r.id)}
+                                    disabled={approveRequest.isPending}
+                                  >
+                                    <Check className="h-3 w-3 mr-1" /> Approve
+                                  </Button>
+                                )}
+                                {r.status === "approved" && (
+                                  <span className="text-green-600 font-medium text-sm">
+                                    ✓ Approved
+                                  </span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+                  {/* Mobile card view */}
+                  <div className="space-y-3 sm:hidden">
+                    {stockRequests.map((r) => (
+                      <Card key={r.id.toString()} className="shadow-royal">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="font-semibold text-base">
+                                {r.itemName}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Qty: {r.quantityRequested.toString()}
+                              </p>
+                            </div>
+                            <Badge
+                              className={
+                                r.status === "approved"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }
+                            >
+                              {r.status}
+                            </Badge>
+                          </div>
+                          {r.reason && (
+                            <p className="text-sm text-muted-foreground mb-3 italic">
+                              "{r.reason}"
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(r.createdAt)}
+                            </span>
+                            {r.status === "pending" && (
+                              <Button
+                                size="sm"
+                                className="bg-green-600 text-white hover:bg-green-700 h-9"
+                                onClick={() => handleApproveRequest(r.id)}
+                                disabled={approveRequest.isPending}
+                              >
+                                <Check className="h-3 w-3 mr-1" /> Approve
+                              </Button>
+                            )}
+                            {r.status === "approved" && (
+                              <span className="text-green-600 font-medium text-sm">
+                                ✓ Approved
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </TabsContent>
